@@ -1,0 +1,16 @@
+# dependencies
+sos-app/node_modules/
+
+# Expo build outputs
+sos-app/dist/
+sos-app/.expo/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local env files
+*.local
+.env

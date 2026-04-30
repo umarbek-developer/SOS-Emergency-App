@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "SOS — Emergency Help",
+    "slug": "sos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sos",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "permissions": ["android.permission.CALL_PHONE"]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png",
+      "output": "single"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://umarbek-developer.github.io/SOS-Emergency-App"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true,
+      "baseUrl": "/SOS-Emergency-App"
+    }
+  }
+}
