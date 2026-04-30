@@ -26,7 +26,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/contexts/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { placeCall } from "@/lib/calling";
-import { formatCoords, mapsUrl } from "@/lib/location";
+import { mapsUrl, reverseGeocode, watchLocation } from "@/lib/location";
+import type { LocationFix } from "@/lib/location";
 import { EMERGENCY_TYPES } from "@/types";
 
 const COUNTDOWN_SECONDS = 5;
@@ -45,6 +46,9 @@ export function ActiveEmergencyOverlay() {
   const isVisible = Boolean(active);
   const [dialingNumber, setDialingNumber] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [liveLocation, setLiveLocation] = useState<LocationFix | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
+  const lastGeocodedRef = useRef<number>(0);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -121,6 +125,28 @@ export function ActiveEmergencyOverlay() {
 
   useEffect(() => {
     if (!active) {
+      setLiveLocation(null);
+      setAddress(null);
+      lastGeocodedRef.current = 0;
+      return;
+    }
+    setLiveLocation(active.location);
+    const stop = watchLocation((fix) => setLiveLocation(fix));
+    return stop;
+  }, [active]);
+
+  useEffect(() => {
+    if (!liveLocation) return;
+    const now = Date.now();
+    if (now - lastGeocodedRef.current < 20_000) return;
+    lastGeocodedRef.current = now;
+    reverseGeocode(liveLocation.latitude, liveLocation.longitude).then((addr) => {
+      if (addr) setAddress(addr);
+    });
+  }, [liveLocation]);
+
+  useEffect(() => {
+    if (!active) {
       setSecondsLeft(COUNTDOWN_SECONDS);
       setDialingNumber(null);
       triggeredRef.current = false;
@@ -191,8 +217,8 @@ export function ActiveEmergencyOverlay() {
   };
 
   const openMaps = () => {
-    if (active.location) {
-      Linking.openURL(mapsUrl(active.location)).catch(() => {});
+    if (liveLocation) {
+      Linking.openURL(mapsUrl(liveLocation)).catch(() => {});
     }
   };
 
@@ -287,24 +313,27 @@ export function ActiveEmergencyOverlay() {
               onPress={openMaps}
               style={({ pressed }) => [
                 styles.locationCard,
-                { opacity: pressed && active.location ? 0.85 : 1 },
+                { opacity: pressed && liveLocation ? 0.85 : 1 },
               ]}
             >
               <View style={styles.locationIconCol}>
                 <Ionicons name="location" size={22} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.locationLabel}>Location shared</Text>
+                <Text style={styles.locationLabel}>Live location</Text>
                 <Text style={styles.locationCoords}>
-                  {formatCoords(active.location)}
+                  {address ?? (liveLocation ? "Searching address…" : "Location unavailable")}
                 </Text>
-                {active.location?.accuracy != null ? (
+                {liveLocation ? (
                   <Text style={styles.locationAccuracy}>
-                    Accurate to ~{Math.round(active.location.accuracy)}m
+                    {`${liveLocation.latitude.toFixed(5)}, ${liveLocation.longitude.toFixed(5)}`}
+                    {liveLocation.accuracy != null
+                      ? ` · ~${Math.round(liveLocation.accuracy)}m`
+                      : ""}
                   </Text>
                 ) : null}
               </View>
-              {active.location ? (
+              {liveLocation ? (
                 <Feather name="external-link" size={16} color="#fff" />
               ) : null}
             </Pressable>
