@@ -67,12 +67,23 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string |
       const a = data.address ?? {};
       const parts: string[] = [];
       // Street
-      if (a.house_number && a.road) parts.push(`${a.house_number} ${a.road}`);
-      else if (a.road) parts.push(a.road);
-      else if (a.pedestrian) parts.push(a.pedestrian);
-      // Neighborhood (quarter is common in Central Asia/CIS)
-      const sub = a.quarter ?? a.neighbourhood ?? a.suburb ?? a.city_district ?? a.district;
-      if (sub) parts.push(sub);
+      if (a.road) {
+        parts.push(a.house_number ? `${a.house_number} ${a.road}` : a.road);
+      } else if (a.pedestrian) {
+        parts.push(a.pedestrian);
+      }
+      // Kvartal (quarter field; format as "X-kvartal" when Nominatim gives a bare number)
+      if (a.quarter) {
+        const kv = /^\d+$/.test(a.quarter.trim()) ? `${a.quarter}-kvartal` : a.quarter;
+        parts.push(kv);
+      }
+      // Dom number — only relevant when there is no named street (kvartal-style address)
+      if (!a.road && a.house_number) {
+        parts.push(`dom ${a.house_number}`);
+      }
+      // Neighbourhood / suburb / district (skip if same text as quarter)
+      const nb = a.neighbourhood ?? a.suburb ?? a.city_district ?? a.district;
+      if (nb && nb !== a.quarter) parts.push(nb);
       // City
       const city = a.city ?? a.town ?? a.municipality ?? a.village ?? a.county;
       if (city) parts.push(city);
