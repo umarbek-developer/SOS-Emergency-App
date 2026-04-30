@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   Vibration,
   View,
 } from "react-native";
@@ -55,6 +56,8 @@ export default function SettingsScreen() {
     initialMount.current = false;
   }, []);
 
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 600;
   const bottomPad = Platform.OS === "web" ? 84 + 34 : insets.bottom + 90;
 
   const cycleHold = () => {
@@ -150,7 +153,11 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: bottomPad }]}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: bottomPad },
+          isWide && { maxWidth: 580, alignSelf: "center" as const, width: "100%" },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader

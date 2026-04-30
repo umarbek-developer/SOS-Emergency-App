@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { EMERGENCY_TYPES, type EmergencyType } from "@/types";
+
+const COLS = 3;
+const GAP = 10;
 
 interface Props {
   selected: EmergencyType;
@@ -13,11 +16,16 @@ interface Props {
 export function EmergencyTypeGrid({ selected, onSelect }: Props) {
   const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
-  // 40 = screen horizontal padding (20 each side), 20 = two 10px gaps between 3 tiles
-  const tileWidth = Math.floor((screenWidth - 40 - 20) / 3);
+  // Measure the actual rendered grid width (accounts for parent max-width constraints).
+  // Fall back to an estimate until the first layout event fires.
+  const [gridWidth, setGridWidth] = useState(screenWidth - 40);
+  const tileWidth = Math.floor((gridWidth - (COLS - 1) * GAP) / COLS);
 
   return (
-    <View style={styles.grid}>
+    <View
+      style={styles.grid}
+      onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+    >
       {EMERGENCY_TYPES.map((meta) => {
         const isSelected = meta.key === selected;
         return (

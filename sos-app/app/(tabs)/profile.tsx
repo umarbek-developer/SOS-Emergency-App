@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ProfileField } from "@/components/ProfileField";
@@ -41,13 +41,19 @@ export default function ProfileScreen() {
     setDraft((prev) => ({ ...prev, ...next }));
   };
 
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 600;
   const bottomPad = Platform.OS === "web" ? 84 + 34 : insets.bottom + 90;
   const completion = computeCompletion(view);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: bottomPad }]}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: bottomPad },
+          isWide && { maxWidth: 580, alignSelf: "center" as const, width: "100%" },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >

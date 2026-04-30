@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmergencyTypeGrid } from "@/components/EmergencyTypeGrid";
@@ -12,11 +12,16 @@ import { useColors } from "@/hooks/useColors";
 import { getCurrentLocation } from "@/lib/location";
 import { EMERGENCY_TYPES, type EmergencyType } from "@/types";
 
+const MAX_W = 580;
+
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { contacts, settings, startEmergency, showToast } = useApp();
   const [selectedType, setSelectedType] = useState<EmergencyType>("medical");
+
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 600;
 
   const personalContacts = contacts.filter(
     (c) => !c.isService && c.phone.trim().length > 0,
@@ -52,7 +57,11 @@ export default function HomeScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: bottomPad }]}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: bottomPad },
+          isWide && { maxWidth: MAX_W, alignSelf: "center" as const, width: "100%" },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader

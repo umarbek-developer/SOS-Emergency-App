@@ -12,6 +12,7 @@ import {
   Text,
   Vibration,
   View,
+  useWindowDimensions,
 } from "react-native";
 import Animated, {
   Easing,
@@ -33,6 +34,8 @@ const COUNTDOWN_SECONDS = 5;
 export function ActiveEmergencyOverlay() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 600;
   const { active, contacts, settings, health, endEmergency } = useApp();
   const pulse = useSharedValue(1);
   const [secondsLeft, setSecondsLeft] = useState<number>(COUNTDOWN_SECONDS);
@@ -211,6 +214,7 @@ export function ActiveEmergencyOverlay() {
               paddingTop: insets.top + 24,
               paddingBottom: insets.bottom + 32,
             },
+            isWide && { maxWidth: 580, alignSelf: "center" as const, width: "100%" },
           ]}
           showsVerticalScrollIndicator={false}
         >
