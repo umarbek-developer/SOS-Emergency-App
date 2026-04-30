@@ -37,6 +37,21 @@ export function SOSButton({ holdSeconds, onActivate, haptics = true }: Props) {
   const [holding, setHolding] = useState(false);
 
   const startedRef = useRef<number>(0);
+  const pressableRef = useRef<View>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const el = pressableRef.current as unknown as HTMLElement | null;
+    if (!el) return;
+    // Prevent the browser context-menu (fires after ~500 ms on Android Chrome)
+    // which sends a pointercancel and kills the hold gesture.
+    const prevent = (e: Event) => e.preventDefault();
+    el.addEventListener("contextmenu", prevent);
+    // Prevent the scroll container from stealing the touch mid-hold.
+    el.style.touchAction = "none";
+    el.style.userSelect = "none";
+    return () => el.removeEventListener("contextmenu", prevent);
+  }, []);
 
   useEffect(() => {
     pulse.value = withRepeat(
@@ -95,6 +110,7 @@ export function SOSButton({ holdSeconds, onActivate, haptics = true }: Props) {
         ]}
       />
       <Pressable
+        ref={pressableRef}
         accessibilityLabel={`Hold for ${holdSeconds} seconds to send SOS`}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}

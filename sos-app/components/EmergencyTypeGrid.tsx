@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { EMERGENCY_TYPES, type EmergencyType } from "@/types";
@@ -12,6 +12,9 @@ interface Props {
 
 export function EmergencyTypeGrid({ selected, onSelect }: Props) {
   const colors = useColors();
+  const { width: screenWidth } = useWindowDimensions();
+  // 40 = screen horizontal padding (20 each side), 20 = two 10px gaps between 3 tiles
+  const tileWidth = Math.floor((screenWidth - 40 - 20) / 3);
 
   return (
     <View style={styles.grid}>
@@ -24,6 +27,7 @@ export function EmergencyTypeGrid({ selected, onSelect }: Props) {
             style={({ pressed }) => [
               styles.tile,
               {
+                width: tileWidth,
                 backgroundColor: isSelected ? meta.color + "26" : colors.card,
                 borderColor: isSelected ? meta.color : colors.border,
                 opacity: pressed ? 0.85 : 1,
@@ -64,10 +68,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    justifyContent: "space-between",
   },
   tile: {
-    width: "31.5%",
     paddingVertical: 14,
     paddingHorizontal: 8,
     borderRadius: 16,
