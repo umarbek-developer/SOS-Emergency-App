@@ -22,7 +22,7 @@ export async function getCurrentLocation(): Promise<LocationFix | null> {
             accuracy: pos.coords.accuracy ?? null,
           }),
         () => resolve(null),
-        { enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
       );
     });
   }
@@ -56,8 +56,8 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string |
   if (Platform.OS === "web") {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
-        { headers: { "Accept-Language": "en" } },
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=en`,
+        { headers: { "User-Agent": "SOS-Emergency-App/1.0" } },
       );
       if (!res.ok) return null;
       const data = await res.json() as {
@@ -66,13 +66,26 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string |
       };
       const a = data.address ?? {};
       const parts: string[] = [];
+      // Street
       if (a.house_number && a.road) parts.push(`${a.house_number} ${a.road}`);
       else if (a.road) parts.push(a.road);
-      const sub = a.suburb ?? a.neighbourhood ?? a.district;
+      else if (a.pedestrian) parts.push(a.pedestrian);
+      // Neighborhood (quarter is common in Central Asia/CIS)
+      const sub = a.quarter ?? a.neighbourhood ?? a.suburb ?? a.city_district ?? a.district;
       if (sub) parts.push(sub);
-      const city = a.city ?? a.town ?? a.village;
+      // City
+      const city = a.city ?? a.town ?? a.municipality ?? a.village ?? a.county;
       if (city) parts.push(city);
-      return parts.length > 0 ? parts.join(", ") : (data.display_name ?? null);
+      if (parts.length > 0) return parts.join(", ");
+      // Fallback: use display_name but strip postal code and country
+      if (data.display_name) {
+        const segments = data.display_name.split(", ");
+        const trimmed = segments
+          .filter((s) => !/^\d{4,}$/.test(s.trim()))
+          .slice(0, -1);
+        return trimmed.slice(0, 3).join(", ") || data.display_name;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -104,7 +117,7 @@ export function watchLocation(callback: (fix: LocationFix) => void): () => void 
           accuracy: pos.coords.accuracy ?? null,
         }),
       () => {},
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
     );
     return () => navigator.geolocation.clearWatch(id);
   }

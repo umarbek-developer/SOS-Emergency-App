@@ -138,7 +138,7 @@ export function ActiveEmergencyOverlay() {
   useEffect(() => {
     if (!liveLocation) return;
     const now = Date.now();
-    if (now - lastGeocodedRef.current < 20_000) return;
+    if (now - lastGeocodedRef.current < 10_000) return;
     lastGeocodedRef.current = now;
     reverseGeocode(liveLocation.latitude, liveLocation.longitude).then((addr) => {
       if (addr) setAddress(addr);
